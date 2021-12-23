@@ -63,21 +63,7 @@ pub fn get_property(name: &str) -> eyre::Result<Option<String>> {
 }
 
 pub(crate) fn find_control_file() -> eyre::Result<(PathBuf, String)> {
-    for f in std::fs::read_dir(".").wrap_err("cannot open current directory for reading")? {
-        if f.is_ok() {
-            if let Ok(f) = f {
-                if f.file_name().to_string_lossy().ends_with(".control") {
-                    let filename = f.file_name().into_string().unwrap();
-                    let mut extname: Vec<&str> = filename.split('.').collect();
-                    extname.pop();
-                    let extname = extname.pop().unwrap();
-                    return Ok((filename.clone().into(), extname.to_string()));
-                }
-            }
-        }
-    }
-
-    Err(eyre!("control file not found in current directory"))
+    pgx_utils::find_control_file()
 }
 
 fn determine_git_hash() -> eyre::Result<Option<String>> {
