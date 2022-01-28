@@ -11,7 +11,10 @@ pub(crate) fn impl_postgres_eq(ast: DeriveInput) -> proc_macro2::TokenStream {
     stream
 }
 
-pub(crate) fn impl_postgres_ord(ast: DeriveInput) -> proc_macro2::TokenStream {
+pub(crate) fn impl_postgres_ord(
+    ast: DeriveInput,
+    to_sql_config: sql_entity_graph::ToSqlConfig,
+) -> proc_macro2::TokenStream {
     let mut stream = proc_macro2::TokenStream::new();
 
     stream.extend(lt(&ast.ident));
@@ -20,18 +23,23 @@ pub(crate) fn impl_postgres_ord(ast: DeriveInput) -> proc_macro2::TokenStream {
     stream.extend(ge(&ast.ident));
     stream.extend(cmp(&ast.ident));
 
-    let sql_graph_entity_item = sql_entity_graph::PostgresOrd::new(ast.ident.clone());
+    let sql_graph_entity_item =
+        sql_entity_graph::PostgresOrd::new(ast.ident.clone(), to_sql_config);
     sql_graph_entity_item.to_tokens(&mut stream);
 
     stream
 }
 
-pub(crate) fn impl_postgres_hash(ast: DeriveInput) -> proc_macro2::TokenStream {
+pub(crate) fn impl_postgres_hash(
+    ast: DeriveInput,
+    to_sql_config: sql_entity_graph::ToSqlConfig,
+) -> proc_macro2::TokenStream {
     let mut stream = proc_macro2::TokenStream::new();
 
     stream.extend(hash(&ast.ident));
 
-    let sql_graph_entity_item = sql_entity_graph::PostgresHash::new(ast.ident.clone());
+    let sql_graph_entity_item =
+        sql_entity_graph::PostgresHash::new(ast.ident.clone(), to_sql_config);
     sql_graph_entity_item.to_tokens(&mut stream);
 
     stream

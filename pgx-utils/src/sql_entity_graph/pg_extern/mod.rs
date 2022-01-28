@@ -8,8 +8,8 @@ pub use argument::Argument;
 use attribute::{Attribute, PgxAttributes};
 pub use operator::PgOperator;
 use operator::{PgxOperatorAttributeWithIdent, PgxOperatorOpName};
-use returning::Returning;
 pub(crate) use returning::NameMacro;
+use returning::Returning;
 use search_path::SearchPathList;
 
 use eyre::WrapErr;
@@ -18,6 +18,8 @@ use quote::{quote, ToTokens, TokenStreamExt};
 use std::convert::TryFrom;
 use syn::parse::{Parse, ParseStream};
 use syn::Meta;
+
+use crate::sql_entity_graph::ToSqlConfig;
 
 /// A parsed `#[pg_extern]` item.
 ///
@@ -45,6 +47,7 @@ pub struct PgExtern {
     attrs: Option<PgxAttributes>,
     attr_tokens: proc_macro2::TokenStream,
     func: syn::ItemFn,
+    to_sql_config: ToSqlConfig,
 }
 
 impl PgExtern {
@@ -193,10 +196,13 @@ impl PgExtern {
     pub fn new(attr: TokenStream2, item: TokenStream2) -> Result<Self, syn::Error> {
         let attrs = syn::parse2::<PgxAttributes>(attr.clone()).ok();
         let func = syn::parse2::<syn::ItemFn>(item)?;
+        let to_sql_config =
+            ToSqlConfig::from_attributes(func.attrs.as_slice())?.unwrap_or_default();
         Ok(Self {
-            attrs: attrs,
+            attrs,
             attr_tokens: attr,
-            func: func,
+            func,
+            to_sql_config,
         })
     }
 }
@@ -222,6 +228,7 @@ impl ToTokens for PgExtern {
         };
         let operator = self.operator().into_iter();
         let overridden = self.overridden().into_iter();
+        let to_sql_config = &self.to_sql_config;
 
         let sql_graph_entity_fn_name =
             syn::Ident::new(&format!("__pgx_internals_fn_{}", ident), Span::call_site());
@@ -243,6 +250,7 @@ impl ToTokens for PgExtern {
                     fn_return: #returns,
                     operator: None#( .unwrap_or(Some(#operator)) )*,
                     overridden: None#( .unwrap_or(Some(#overridden)) )*,
+                    to_sql_config: #to_sql_config,
                 };
                 pgx::datum::sql_entity_graph::SqlGraphEntity::Function(submission)
             }
@@ -254,12 +262,15 @@ impl ToTokens for PgExtern {
 impl Parse for PgExtern {
     fn parse(input: ParseStream) -> Result<Self, syn::Error> {
         let attrs: Option<PgxAttributes> = input.parse().ok();
-        let func = input.parse()?;
+        let func: syn::ItemFn = input.parse()?;
+        let to_sql_config =
+            ToSqlConfig::from_attributes(func.attrs.as_slice())?.unwrap_or_default();
         let attr_tokens: proc_macro2::TokenStream = attrs.clone().into_token_stream();
         Ok(Self {
             attrs,
             attr_tokens,
             func,
+            to_sql_config,
         })
     }
 }

@@ -10,7 +10,7 @@ pub use returning::PgExternReturnEntity;
 
 use pgx_utils::ExternArgs;
 
-use super::{SqlGraphEntity, SqlGraphIdentifier, ToSql};
+use super::{SqlGraphEntity, SqlGraphIdentifier, ToSql, ToSqlConfig};
 use pgx_utils::sql_entity_graph::SqlDeclared;
 use std::cmp::Ordering;
 
@@ -30,6 +30,7 @@ pub struct PgExternEntity {
     pub fn_return: PgExternReturnEntity,
     pub operator: Option<PgOperatorEntity>,
     pub overridden: Option<&'static str>,
+    pub to_sql_config: ToSqlConfig,
 }
 
 impl Ord for PgExternEntity {

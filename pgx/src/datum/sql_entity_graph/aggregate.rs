@@ -1,6 +1,6 @@
 use crate::{
     aggregate::{FinalizeModify, ParallelOption},
-    datum::sql_entity_graph::{SqlGraphEntity, SqlGraphIdentifier, ToSql},
+    datum::sql_entity_graph::{SqlGraphEntity, SqlGraphIdentifier, ToSql, ToSqlConfig},
 };
 use core::{any::TypeId, cmp::Ordering};
 use eyre::eyre as eyre_err;
@@ -126,6 +126,7 @@ pub struct PgAggregateEntity {
     ///
     /// Corresponds to `hypothetical` in [`crate::aggregate::Aggregate`].
     pub hypothetical: bool,
+    pub to_sql_config: ToSqlConfig,
 }
 
 impl Ord for PgAggregateEntity {
@@ -240,7 +241,7 @@ impl ToSql for PgAggregateEntity {
             "\n\
                 -- {file}:{line}\n\
                 -- {full_path}\n\
-                CREATE AGGREGATE {schema}{name} ({args}{maybe_order_by})\n\
+                CREATE OR REPLACE AGGREGATE {schema}{name} ({args}{maybe_order_by})\n\
                 (\n\
                     \tSFUNC = {schema}\"{sfunc}\",\n\
                     \tSTYPE = {schema}{stype}{maybe_comma_after_stype} /* {stype_full_path} */\

@@ -160,6 +160,23 @@ pub fn merges(_attr: TokenStream, item: TokenStream) -> TokenStream {
 }
 
 /**
+Helper attribute for non-derive contexts
+Used to control the behavior of the SQL generator on the decorated item
+
+Currently can be provided either a boolean to enable/disable SQL generation
+for the item, or can be provided a path to a function with the expected signature.
+
+Examples:
+
+* Disable SQL generation with `#[to_sql(false)]`
+* Call custom SQL generator function with `#[to_sql(path::to_function)]`
+*/
+#[proc_macro_attribute]
+pub fn to_sql(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    item
+}
+
+/**
 Declare a Rust module and its contents to be in a schema.
 
 The schema name will always be the `mod`'s identifier. So `mod flop` will create a `flop` schema.
@@ -597,7 +614,7 @@ enum DogNames {
 ```
 
 */
-#[proc_macro_derive(PostgresEnum, attributes(requires))]
+#[proc_macro_derive(PostgresEnum, attributes(requires, to_sql))]
 pub fn postgres_enum(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as syn::DeriveInput);
 
@@ -685,7 +702,10 @@ Optionally accepts the following attributes:
 * `pgvarlena_inoutfuncs(some_in_fn, some_out_fn)`: Define custom in/out functions for the `PgVarlena` of this type.
 
 */
-#[proc_macro_derive(PostgresType, attributes(inoutfuncs, pgvarlena_inoutfuncs, requires))]
+#[proc_macro_derive(
+    PostgresType,
+    attributes(inoutfuncs, pgvarlena_inoutfuncs, requires, to_sql)
+)]
 pub fn postgres_type(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as syn::DeriveInput);
 
@@ -913,7 +933,7 @@ enum DogNames {
 ```
 
 */
-#[proc_macro_derive(PostgresEq)]
+#[proc_macro_derive(PostgresEq, attributes(to_sql))]
 pub fn postgres_eq(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as syn::DeriveInput);
     impl_postgres_eq(ast).into()
@@ -937,10 +957,19 @@ enum DogNames {
 ```
 
 */
-#[proc_macro_derive(PostgresOrd)]
+#[proc_macro_derive(PostgresOrd, attributes(to_sql))]
 pub fn postgres_ord(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as syn::DeriveInput);
-    impl_postgres_ord(ast).into()
+    let to_sql_config = match sql_entity_graph::ToSqlConfig::from_attributes(ast.attrs.as_slice()) {
+        Err(e) => {
+            let msg = e.to_string();
+            return TokenStream::from(quote! {
+                compile_error!(#msg);
+            });
+        }
+        Ok(maybe_conf) => maybe_conf.unwrap_or_default(),
+    };
+    impl_postgres_ord(ast, to_sql_config).into()
 }
 
 /**
@@ -958,10 +987,19 @@ enum DogNames {
 ```
 
 */
-#[proc_macro_derive(PostgresHash)]
+#[proc_macro_derive(PostgresHash, attributes(to_sql))]
 pub fn postgres_hash(input: TokenStream) -> TokenStream {
     let ast = parse_macro_input!(input as syn::DeriveInput);
-    impl_postgres_hash(ast).into()
+    let to_sql_config = match sql_entity_graph::ToSqlConfig::from_attributes(ast.attrs.as_slice()) {
+        Err(e) => {
+            let msg = e.to_string();
+            return TokenStream::from(quote! {
+                compile_error!(#msg);
+            });
+        }
+        Ok(maybe_conf) => maybe_conf.unwrap_or_default(),
+    };
+    impl_postgres_hash(ast, to_sql_config).into()
 }
 
 /**
@@ -1002,4 +1040,3 @@ Used outside of a [`#[pg_aggregate]`](pg_aggregate), this does nothing.
 pub fn pgx(_attr: TokenStream, item: TokenStream) -> TokenStream {
     item
 }
-

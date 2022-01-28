@@ -7,6 +7,7 @@ mod postgres_enum;
 mod postgres_hash;
 mod postgres_ord;
 mod postgres_type;
+mod to_sql;
 
 pub use super::ExternArgs;
 pub use extension_sql::{ExtensionSql, ExtensionSqlFile, SqlDeclared};
@@ -18,6 +19,7 @@ pub use postgres_enum::PostgresEnum;
 pub use postgres_hash::PostgresHash;
 pub use postgres_ord::PostgresOrd;
 pub use postgres_type::PostgresType;
+pub use to_sql::ToSqlConfig;
 
 /// Reexports for the pgx SQL generator binaries.
 #[doc(hidden)]

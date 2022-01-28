@@ -110,13 +110,54 @@ impl ToSql for SqlGraphEntity {
                 }
             }) {
                 Ok(String::default())
-            } else { item.to_sql(context) },
-            SqlGraphEntity::Type(item) => item.to_sql(context),
+            } else if let Some(callback) = item.to_sql_config.callback {
+                callback(self, context)
+            } else if item.to_sql_config.enabled {
+                item.to_sql(context)
+            } else {
+                Ok(String::default())
+            },
+            SqlGraphEntity::Type(item) if !item.to_sql_config.enabled => Ok(String::default()),
+            SqlGraphEntity::Type(item) => {
+                if let Some(callback) = item.to_sql_config.callback {
+                    callback(self, context)
+                } else {
+                    item.to_sql(context)
+                }
+            }
             SqlGraphEntity::BuiltinType(_) => Ok(String::default()),
-            SqlGraphEntity::Enum(item) => item.to_sql(context),
-            SqlGraphEntity::Ord(item) => item.to_sql(context),
-            SqlGraphEntity::Hash(item) => item.to_sql(context),
-            SqlGraphEntity::Aggregate(item) => item.to_sql(context),
+            SqlGraphEntity::Enum(item) if !item.to_sql_config.enabled => Ok(String::default()),
+            SqlGraphEntity::Enum(item) => {
+                if let Some(callback) = item.to_sql_config.callback {
+                    callback(self, context)
+                } else {
+                    item.to_sql(context)
+                }
+            }
+            SqlGraphEntity::Ord(item) if !item.to_sql_config.enabled => Ok(String::default()),
+            SqlGraphEntity::Ord(item) => {
+                if let Some(callback) = item.to_sql_config.callback {
+                    callback(self, context)
+                } else {
+                    item.to_sql(context)
+                }
+            }
+            SqlGraphEntity::Hash(item) if !item.to_sql_config.enabled => Ok(String::default()),
+            SqlGraphEntity::Hash(item) => {
+                if let Some(callback) = item.to_sql_config.callback {
+                    callback(self, context)
+                } else {
+                    item.to_sql(context)
+                }
+            }
+            SqlGraphEntity::Aggregate(item) if !item.to_sql_config.enabled => Ok(String::default()),
+            SqlGraphEntity::Aggregate(item) => {
+                if let Some(callback) = item.to_sql_config.callback {
+                    callback(self, context)
+                } else {
+                    item.to_sql(context)
+                }
+            }
             SqlGraphEntity::ExtensionRoot(item) => item.to_sql(context),
         }
     }
