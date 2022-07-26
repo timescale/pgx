@@ -27,7 +27,7 @@ syn = { version = "1.0.86", features = [ "extra-traits", "full", "fold", "parsin
 toml = "0.5.8"
 unescape = "0.1.0"
 url = "2.2.2"
-eyre = "0.6.6"
+eyre = "0.6.8"
 color-eyre = "0.6.0"
 tracing = "0.1.30"
 tracing-error = "0.2.0"
