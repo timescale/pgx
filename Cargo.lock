@@ -913,6 +913,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "hash32"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47d60b12902ba28e2730cd37e95b8c9223af2808df9e902d4df49588d1470606"
+dependencies = [
+ "byteorder",
+]
+
+[[package]]
 name = "hashbrown"
 version = "0.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -925,7 +934,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d076121838e03f862871315477528debffdb7462fb229216ecef91b1a3eb31eb"
 dependencies = [
  "atomic-polyfill",
- "hash32",
+ "hash32 0.2.1",
  "spin",
  "stable_deref_trait",
 ]
@@ -1407,7 +1416,7 @@ dependencies = [
  "cstr_core",
  "enum-primitive-derive",
  "eyre",
- "hash32",
+ "hash32 0.3.1",
  "heapless",
  "num-traits",
  "once_cell",
